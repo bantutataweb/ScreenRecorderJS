@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Recorder with Audio</title>
+    <style>
+        #controls {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .color-mulai-nodisable {
+            background-color: #ffa500;
+            cursor: pointer;
+        }
+        .color-mulai-disable {
+            background-color: #fde4b6;
+        }
+        .color-stop-nodisable {
+            background-color: #ff0000;
+            cursor: pointer;
+        }
+        .color-stop-disable {
+            background-color: #ffc4c4;
+        }
+        .start {
+            color: white;
+            border: none;
+            padding: 10px;
+
+        }
+        .stop {
+            color: white;
+            border: none;
+            padding: 10px;
+            
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button class="start color-mulai-nodisable" id="start">Start Recording</button>
+        <button class="stop color-stop-disable" id="stop" disabled>Stop Recording</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const startButton = document.getElementById('start');
+            const stopButton = document.getElementById('stop');
+
+            let mediaRecorder;
+            let recordedChunks = [];
+
+            async function startRecording() {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { mediaSource: 'screen' },
+                    audio: true, 
+                });
+
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    recordedChunks = [];
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'recording.webm';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+
+                mediaRecorder.start();
+                startButton.classList.remove("color-mulai-nodisable");
+                startButton.classList.add("color-mulai-disable");
+                stopButton.classList.remove("color-stop-disable");
+                stopButton.classList.add("color-stop-nodisable");
+                startButton.disabled = true;
+                stopButton.disabled = false;
+            }
+
+            function stopRecording() {
+                mediaRecorder.stop();
+                startButton.classList.remove("color-mulai-disable");
+                startButton.classList.add("color-mulai-nodisable");
+                stopButton.classList.remove("color-stop-nodisable");
+                stopButton.classList.add("color-stop-disable");
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            }
+
+            startButton.addEventListener('click', startRecording);
+            stopButton.addEventListener('click', stopRecording);
+        });
+    </script>
+</body>
+</html>
